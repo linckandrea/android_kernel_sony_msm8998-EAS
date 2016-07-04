@@ -7,7 +7,9 @@
  * Copyright (C) 2008 Fabio Checconi <fabio@gandalf.sssup.it>
  *		      Paolo Valente <paolo.valente@unimore.it>
  *
- * Copyright (C) 2010 Paolo Valente <paolo.valente@unimore.it>
+ * Copyright (C) 2015 Paolo Valente <paolo.valente@unimore.it>
+ *
+ * Copyright (C) 2016 Paolo Valente <paolo.valente@linaro.org>
  *
  * Licensed under the GPL-2 as detailed in the accompanying COPYING.BFQ
  * file.
@@ -307,7 +309,7 @@ static void bfq_init_entity(struct bfq_entity *entity,
 		bfqq->ioprio_class = bfqq->new_ioprio_class;
 		bfqg_get(bfqg);
 	}
-	entity->parent = bfqg->my_entity;
+	entity->parent = bfqg->my_entity; /* NULL for root group */
 	entity->sched_data = &bfqg->sched_data;
 }
 
@@ -450,29 +452,29 @@ static void bfq_group_set_parent(struct bfq_group *bfqg,
 	entity->sched_data = &parent->sched_data;
 }
 
-static struct bfq_group *bfq_find_alloc_group(struct bfq_data *bfqd,
-					      struct blkcg *blkcg)
+static struct bfq_group *bfq_lookup_bfqg(struct bfq_data *bfqd,
+					 struct blkcg *blkcg)
 {
-	struct request_queue *q = bfqd->queue;
-	struct bfq_group *bfqg = NULL, *parent;
-	struct bfq_entity *entity = NULL;
+	struct blkcg_gq *blkg;
+
+	blkg = blkg_lookup(blkcg, bfqd->queue);
+	if (likely(blkg))
+		return blkg_to_bfqg(blkg);
+	return NULL;
+}
+
+static struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+					    struct blkcg *blkcg)
+{
+	struct bfq_group *bfqg, *parent;
+	struct bfq_entity *entity;
 
 	assert_spin_locked(bfqd->queue->queue_lock);
 
-	/* avoid lookup for the common case where there's no blkcg */
-	if (blkcg == &blkcg_root) {
-		bfqg = bfqd->root_group;
-	} else {
-		struct blkcg_gq *blkg;
+	bfqg = bfq_lookup_bfqg(bfqd, blkcg);
 
-		blkg = blkg_lookup_create(blkcg, q);
-		if (!IS_ERR(blkg))
-			bfqg = blkg_to_bfqg(blkg);
-		else /* fallback to root_group */
-			bfqg = bfqd->root_group;
-	}
-
-	BUG_ON(!bfqg);
+	if (unlikely(!bfqg))
+		return NULL;
 
 	/*
 	 * Update chain of bfq_groups as we might be handling a leaf group
@@ -545,7 +547,7 @@ static void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 	BUG_ON(RB_EMPTY_ROOT(&bfqq->sort_list) && bfq_bfqq_busy(bfqq));
 
 	if (bfq_bfqq_busy(bfqq))
-		bfq_deactivate_bfqq(bfqd, bfqq, 0);
+		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
 	else if (entity->on_st) {
 		BUG_ON(&bfq_entity_service_tree(entity)->idle !=
 		       entity->tree);
@@ -599,7 +601,11 @@ static struct bfq_group *__bfq_bic_change_cgroup(struct bfq_data *bfqd,
 
 	lockdep_assert_held(bfqd->queue->queue_lock);
 
-	bfqg = bfq_find_alloc_group(bfqd, blkcg);
+	bfqg = bfq_find_set_group(bfqd, blkcg);
+
+	if (unlikely(!bfqg))
+		bfqg = bfqd->root_group;
+
 	if (async_bfqq) {
 		entity = &async_bfqq->entity;
 
@@ -653,7 +659,7 @@ static void bfq_flush_idle_tree(struct bfq_service_tree *st)
 	struct bfq_entity *entity = st->first_idle;
 
 	for (; entity ; entity = st->first_idle)
-		__bfq_deactivate_entity(entity, 0);
+		__bfq_deactivate_entity(entity, false);
 }
 
 /**
@@ -761,7 +767,7 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
 	BUG_ON(bfqg->sched_data.next_in_service);
 	BUG_ON(bfqg->sched_data.in_service_entity);
 
-	__bfq_deactivate_entity(entity, 0);
+	__bfq_deactivate_entity(entity, false);
 	bfq_put_async_queues(bfqd, bfqg);
 	BUG_ON(entity->tree);
 
@@ -1112,12 +1118,10 @@ static struct cftype bfq_blkg_files[] = {
 
 static inline void bfqg_stats_update_io_add(struct bfq_group *bfqg,
 			struct bfq_queue *bfqq, int rw) { }
-static inline void bfqg_stats_update_timeslice_used(struct bfq_group *bfqg,
-		       unsigned long time, unsigned long unaccounted_time) { }
-static inline void
-bfqg_stats_update_io_remove(struct bfq_group *bfqg, int rw) { }
-static inline void
-bfqg_stats_update_io_merged(struct bfq_group *bfqg, int rw) { }
+static inline void bfqg_stats_update_io_remove(struct bfq_group *bfqg,
+					       int rw) { }
+static inline void bfqg_stats_update_io_merged(struct bfq_group *bfqg,
+					       int rw) { }
 static inline void bfqg_stats_update_completion(struct bfq_group *bfqg,
 			uint64_t start_time, uint64_t io_start_time, int rw) { }
 static inline void
@@ -1129,6 +1133,9 @@ static inline void bfqg_stats_set_start_empty_time(struct bfq_group *bfqg) { }
 static inline void bfqg_stats_update_idle_time(struct bfq_group *bfqg) { }
 static inline void bfqg_stats_set_start_idle_time(struct bfq_group *bfqg) { }
 static inline void bfqg_stats_update_avg_queue_size(struct bfq_group *bfqg) { }
+
+static void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+			  struct bfq_group *bfqg) {}
 
 static void bfq_init_entity(struct bfq_entity *entity,
 			    struct bfq_group *bfqg)
@@ -1155,8 +1162,8 @@ static void bfq_end_wr_async(struct bfq_data *bfqd)
 	bfq_end_wr_async_queues(bfqd, bfqd->root_group);
 }
 
-static struct bfq_group *bfq_find_alloc_group(struct bfq_data *bfqd,
-                                              struct blkcg *blkcg)
+static struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+					    struct blkcg *blkcg)
 {
 	return bfqd->root_group;
 }
