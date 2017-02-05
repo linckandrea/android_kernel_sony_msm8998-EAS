@@ -769,7 +769,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
 
 	__bfq_deactivate_entity(entity, false);
 	bfq_put_async_queues(bfqd, bfqg);
-	BUG_ON(entity->tree);
 
 	/*
 	 * @blkg is going offline and will be ignored by
@@ -1150,12 +1149,7 @@ static void bfq_init_entity(struct bfq_entity *entity,
 	entity->sched_data = &bfqg->sched_data;
 }
 
-static struct bfq_group *
-bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio)
-{
-	struct bfq_data *bfqd = bic_to_bfqd(bic);
-	return bfqd->root_group;
-}
+static void bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio) {}
 
 static void bfq_end_wr_async(struct bfq_data *bfqd)
 {
