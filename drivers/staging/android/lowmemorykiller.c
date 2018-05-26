@@ -75,7 +75,7 @@
 #include "lowmemorykiller_tng.h"
 #endif
 
-uint32_t lowmem_debug_level = 1;
+uint32_t lowmem_debug_level = 0;
 short lowmem_adj[6] = {
 	0,
 	1,
