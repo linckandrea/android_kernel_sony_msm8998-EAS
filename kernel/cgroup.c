@@ -2949,9 +2949,8 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
 	/* This covers boosting for app launches and app transitions */
 	if (!ret && !threadgroup &&
 	    !strcmp(of->kn->parent->name, "top-app") &&
-	    is_zygote_pid(tsk->parent->pid)) {
+	    task_is_zygote(tsk->parent))
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500);
-	}
 
 	put_task_struct(tsk);
 	goto out_unlock_threadgroup;
