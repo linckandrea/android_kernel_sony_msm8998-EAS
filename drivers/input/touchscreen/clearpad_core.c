@@ -5632,7 +5632,7 @@ enable:
 				this->irq,
 				clearpad_hard_handler,
 				clearpad_threaded_handler,
-				IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+				IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
 				this->pdev->dev.driver->name, this);
 	if (rc)
 		LOGE(this, "irq %d busy? <%d>\n", this->irq, rc);
@@ -9291,7 +9291,7 @@ static int clearpad_probe(struct platform_device *pdev)
 				this->irq,
 				clearpad_hard_handler,
 				clearpad_threaded_handler,
-				IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+				IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
 				this->pdev->dev.driver->name, this);
 	if (rc) {
 		HWLOGE(this, "failed to request threaded irq %d (rc=%d)\n",
