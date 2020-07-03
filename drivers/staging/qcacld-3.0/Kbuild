@@ -1973,6 +1973,9 @@ EXTRA_CFLAGS += -Wmaybe-uninitialized
 endif
 EXTRA_CFLAGS += -Wmissing-prototypes
 
+EXTRA_CFLAGS += $(call cc-option, -g0)
+EXTRA_CFLAGS += $(call cc-option, -DNDEBUG)
+
 ifeq ($(call cc-option-yn, -Wheader-guard),y)
 EXTRA_CFLAGS += -Wheader-guard
 endif
