@@ -5642,7 +5642,7 @@ enable:
 					this->noise_det.irq,
 					clearpad_noise_det_hard_handler,
 					clearpad_noise_det_threaded_handler,
-					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+					IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
 					"clearpad_noise_det", this);
 		if (rc)
 			LOGE(this, "noise_det irq %d busy? <%d>\n",
@@ -9306,7 +9306,7 @@ static int clearpad_probe(struct platform_device *pdev)
 					this->noise_det.irq,
 					clearpad_noise_det_hard_handler,
 					clearpad_noise_det_threaded_handler,
-					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+					IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
 					"clearpad_noise_det", this);
 		if (rc) {
 			HWLOGE(this, "failed to request threaded irq %d"
