@@ -43,21 +43,5 @@ echo
 echo "copying new files"
 echo
 cp ./out/arch/arm64/boot/Image.gz-dtb ./AnyKernel3/poplar/
-cp ./out/block/test-iosched.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/char/rdbg.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/input/misc/bu520x1nvx.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/input/misc/fpc1145_platform.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/media/platform/msm/broadcast/tspp.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/media/platform/msm/dvb/adapter/mpq-adapter.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/media/platform/msm/dvb/demux/mpq-dmx-hw-plugin.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/media/usb/gspca/gspca_main.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/misc/ldo_vibrator.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/misc/pn553.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/misc/sim_detect.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/platform/msm/msm_11ad/msm_11ad_proxy.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/scsi/ufs/ufs_test.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/staging/kscl/kscl.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/net/bridge/br_netfilter.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
-cp ./out/drivers/staging/qcacld-3.0/wlan.ko ./AnyKernel3/poplar/modules/system/vendor/lib/modules/
 cd ./AnyKernel3/poplar/
 zip -r9 Pop_kernel-poplar-Q-rx-x.zip * -x .git README.md *placeholder
