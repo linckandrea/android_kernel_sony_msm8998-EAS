@@ -43,7 +43,7 @@ static DEFINE_IDR(zram_index_idr);
 static DEFINE_MUTEX(zram_index_mutex);
 
 static int zram_major;
-static const char *default_compressor = "lzo";
+static const char *default_compressor = "lz4";
 #define BACKEND_PARAM_BUF_SIZE	32
 static char backend_param_buf[BACKEND_PARAM_BUF_SIZE];
 
