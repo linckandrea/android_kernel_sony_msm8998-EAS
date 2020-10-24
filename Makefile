@@ -298,18 +298,6 @@ hdr-arch  := $(SRCARCH)
 KCONFIG_CONFIG	?= .config
 export KCONFIG_CONFIG
 
-KCONFIG_CONFIGSTOCK	?= .config
-ifeq ($(CONFIG_MACH_SONY_POPLAR_DSDS),y)
-	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/poplar_defconfig
-endif
-ifeq ($(CONFIG_MACH_SONY_MAPLE_DSDS),y)
-	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/maple_defconfig
-endif
-ifeq ($(CONFIG_MACH_SONY_LILAC),y)
-	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/lilac_defconfig
-endif
-export KCONFIG_CONFIGSTOCK
-
 # SHELL used by kbuild
 CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
