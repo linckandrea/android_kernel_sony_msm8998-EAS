@@ -301,9 +301,11 @@ export KCONFIG_CONFIG
 KCONFIG_CONFIGSTOCK	?= .config
 ifeq ($(CONFIG_MACH_SONY_POPLAR_DSDS),y)
 	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/poplar_defconfig
-else ifeq ($(CONFIG_MACH_SONY_MAPLE_DSDS),y)
+endif
+ifeq ($(CONFIG_MACH_SONY_MAPLE_DSDS),y)
 	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/maple_defconfig
-else ifeq ($(CONFIG_MACH_SONY_LILAC),y)
+endif
+ifeq ($(CONFIG_MACH_SONY_LILAC),y)
 	KCONFIG_CONFIGSTOCK	?= arch/arm64/configs/stock/lilac_defconfig
 endif
 export KCONFIG_CONFIGSTOCK
