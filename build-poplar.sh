@@ -12,11 +12,10 @@ echo
 echo "Issue Build Commands"
 echo
 
-export CLANG_PATH=/home/andrea/android/linux-x86/clang-r383902/bin
+export CLANG_PATH=/home/andrea/android/proton-clang/bin
 export PATH=${CLANG_PATH}:${PATH}
-export CLANG_TRIPLE=aarch64-linux-gnu-
-export CROSS_COMPILE=/home/andrea/android/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-export CROSS_COMPILE_ARM32=/home/andrea/android/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+export CROSS_COMPILE=aarch64-linux-gnu-
+export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
 echo
 echo "Set DEFCONFIG"
