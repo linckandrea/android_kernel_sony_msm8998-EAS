@@ -98,7 +98,8 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
-<<<<<<< HEAD
+
+#include "walt.h"
 
 static atomic_t __su_instances;
 
@@ -131,11 +132,6 @@ void su_exit(void)
 {
 	atomic_dec(&__su_instances);
 }
-
-ATOMIC_NOTIFIER_HEAD(load_alert_notifier_head);
-=======
-#include "walt.h"
->>>>>>> 79aab213b4a6... Remove HMP for EAS bringup on msm-4.4
 
 DEFINE_MUTEX(sched_domains_mutex);
 DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
@@ -2151,22 +2147,6 @@ stat:
 out:
 	raw_spin_unlock(&p->pi_lock);
 
-<<<<<<< HEAD
-	if (freq_notif_allowed) {
-		if (!same_freq_domain(src_cpu, cpu)) {
-			check_for_freq_change(cpu_rq(cpu),
-						false, check_group);
-			check_for_freq_change(cpu_rq(src_cpu),
-						false, check_group);
-		} else if (success) {
-			check_for_freq_change(cpu_rq(cpu), true, false);
-		}
-	}
-
-	local_irq_restore(flags);
-
-=======
->>>>>>> 79aab213b4a6... Remove HMP for EAS bringup on msm-4.4
 	return success;
 }
 
