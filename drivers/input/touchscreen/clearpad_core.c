@@ -770,6 +770,7 @@ struct clearpad_cover_t {
 struct clearpad_wakeup_gesture_t {
 	bool supported;
 	bool enabled;
+	bool engaged;
 	unsigned long time_started;
 	u32 timeout_delay;
 	bool use_workaround_for_felica;
@@ -4025,7 +4026,7 @@ static int clearpad_set_suspend_mode(struct clearpad_t *this)
 		HWLOGI(this, "change suspend mode\n");
 
 	if (this->force_sleep != FSMODE_KEEP &&
-	    this->wakeup_gesture.enabled) {
+	    this->wakeup_gesture.engaged) {
 		HWLOGI(this, "prepare for wakeup gesture mode");
 		if (this->early_suspend) {
 			/* F01_RMI_CTRL01.00: Interrupt Enable 0 */
@@ -4044,6 +4045,7 @@ static int clearpad_set_suspend_mode(struct clearpad_t *this)
 			goto end;
 		}
 
+                 this->wakeup_gesture.enabled = true;
 		this->wakeup_gesture.time_started = jiffies - 1;
 		clearpad_set_delay(SYN_WAIT_TIME_AFTER_REGISTER_ACCESS);
 		clearpad_set_irq(this, true);
@@ -4072,6 +4074,7 @@ static int clearpad_set_suspend_mode(struct clearpad_t *this)
 						   "mode\n");
 					goto end;
 				}
+				this->wakeup_gesture.enabled = false;
 				clearpad_set_delay(this->charger_only.delay_ms);
 			}
 			clearpad_set_irq(this, false);
@@ -5813,12 +5816,12 @@ not_ready_to_access_i2c:
 err_in_check_post_probe:
 	LOCK(&this->lock);
 	new = sysfs_streq(buf, "0") ? false : true;
-	old = this->wakeup_gesture.enabled;
-	this->wakeup_gesture.enabled = new;
+	old = this->wakeup_gesture.engaged;
+	this->wakeup_gesture.engaged = new;
 	device_init_wakeup(&this->pdev->dev,
-			this->wakeup_gesture.enabled ? 1 : 0);
+			this->wakeup_gesture.engaged ? 1 : 0);
 	touchctrl_notify_wakeup_gesture_mode(this,
-					this->wakeup_gesture.enabled);
+					this->wakeup_gesture.engaged);
 	if (!lazy_update && !this->dev_active && old != new) {
 		/* mode is changed in already suspended state */
 		rc = clearpad_set_suspend_mode(this);
@@ -5827,7 +5830,7 @@ err_in_check_post_probe:
 
 	}
 	LOGI(this, "wakeup gesture: %s",
-	     this->wakeup_gesture.enabled ? "ENABLE" : "DISABLE");
+	     this->wakeup_gesture.engaged ? "ENABLE" : "DISABLE");
 
 	UNLOCK(&this->lock);
 
