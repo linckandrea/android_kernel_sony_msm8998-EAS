@@ -208,9 +208,6 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	u8 *data;
 	bool pfmemalloc;
 
-	if (IS_ENABLED(CONFIG_FORCE_ALLOC_FROM_DMA_ZONE))
-		gfp_mask |= GFP_DMA;
-
 	cache = (flags & SKB_ALLOC_FCLONE)
 		? skbuff_fclone_cache : skbuff_head_cache;
 
@@ -361,9 +358,6 @@ static void *__netdev_alloc_frag(unsigned int fragsz, gfp_t gfp_mask)
 	unsigned long flags;
 	void *data;
 
-	if (IS_ENABLED(CONFIG_FORCE_ALLOC_FROM_DMA_ZONE))
-		gfp_mask |= GFP_DMA;
-
 	local_irq_save(flags);
 	nc = this_cpu_ptr(&netdev_alloc_cache);
 	data = __alloc_page_frag(nc, fragsz, gfp_mask);
@@ -414,7 +408,6 @@ EXPORT_SYMBOL(napi_alloc_frag);
  *
  *	%NULL is returned if there is no free memory.
  */
-#ifndef CONFIG_DISABLE_NET_SKB_FRAG_CACHE
 struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int len,
 				   gfp_t gfp_mask)
 {
@@ -426,18 +419,11 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int len,
 
 	len += NET_SKB_PAD;
 
-<<<<<<< HEAD
-	if (IS_ENABLED(CONFIG_FORCE_ALLOC_FROM_DMA_ZONE))
-		gfp_mask |= GFP_DMA;
-
-	if ((len > SKB_WITH_OVERHEAD(PAGE_SIZE)) ||
-=======
 	/* If requested length is either too small or too big,
 	 * we use kmalloc() for skb->head allocation.
 	 */
 	if (len <= SKB_WITH_OVERHEAD(1024) ||
 	    len > SKB_WITH_OVERHEAD(PAGE_SIZE) ||
->>>>>>> tff/linux-4.4.y
 	    (gfp_mask & (__GFP_DIRECT_RECLAIM | GFP_DMA))) {
 		skb = __alloc_skb(len, gfp_mask, SKB_ALLOC_RX, NUMA_NO_NODE);
 		if (!skb)
@@ -480,22 +466,6 @@ skb_success:
 skb_fail:
 	return skb;
 }
-#else
-struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
-				   unsigned int length, gfp_t gfp_mask)
-{
-	struct sk_buff *skb = NULL;
-
-	skb = __alloc_skb(length + NET_SKB_PAD, gfp_mask,
-			  SKB_ALLOC_RX, NUMA_NO_NODE);
-	if (likely(skb)) {
-		skb_reserve(skb, NET_SKB_PAD);
-		skb->dev = dev;
-	}
-	return skb;
-}
-#endif
-
 EXPORT_SYMBOL(__netdev_alloc_skb);
 
 /**
