@@ -4,13 +4,13 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=pop kernel for iliac by linckandrea @ xda-developers
+kernel.string=pop kernel for lilac by linckandrea @ xda-developers
 do.devicecheck=1
 do.modules=1
 do.systemless=1
 do.cleanup=1
 do.cleanuponabort=0
-device.name1=iliac
+device.name1=lilac
 device.name2=G8441
 device.name3=
 device.name4=
