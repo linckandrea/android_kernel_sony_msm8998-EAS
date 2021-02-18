@@ -35,7 +35,7 @@ echo
 echo
 echo "Clean up"
 echo
-rm ./AnyKernel3/maple/Pop_kernel-maple-Q-rx-x-EAS.zip
+rm ./AnyKernel3/maple/Pop_kernel-maple-R-rx-x-EAS.zip
 rm ./AnyKernel3/maple/Image.gz-dtb
 
 echo
@@ -43,4 +43,4 @@ echo "copying new files"
 echo
 cp ./out/arch/arm64/boot/Image.gz-dtb ./AnyKernel3/maple/
 cd ./AnyKernel3/maple/
-zip -r9 Pop_kernel-maple-Q-rx-x-EAS.zip * -x .git README.md *placeholder
+zip -r9 Pop_kernel-maple-R-rx-x-EAS.zip * -x .git README.md *placeholder
