@@ -35,7 +35,7 @@ echo
 echo
 echo "Clean up"
 echo
-rm ./AnyKernel3/lilac/Pop_kernel-poplar-Q-rx-x-EAS.zip
+rm ./AnyKernel3/lilac/Pop_kernel-lilac-R-rx-x-EAS.zip
 rm ./AnyKernel3/lilac/Image.gz-dtb
 
 echo
@@ -43,4 +43,4 @@ echo "copying new files"
 echo
 cp ./out/arch/arm64/boot/Image.gz-dtb ./AnyKernel3/lilac/
 cd ./AnyKernel3/lilac/
-zip -r9 Pop_kernel-lilac-Q-rx-x-EAS.zip * -x .git README.md *placeholder
+zip -r9 Pop_kernel-lilac-R-rx-x-EAS.zip * -x .git README.md *placeholder
