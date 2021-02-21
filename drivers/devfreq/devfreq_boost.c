@@ -10,6 +10,7 @@
 #include <linux/input.h>
 #include <linux/kthread.h>
 #include <linux/moduleparam.h>
+#include <linux/stamina.h>
 
 static unsigned short devfreq_wake_boost_duration_ms __read_mostly =
 	CONFIG_DEVFREQ_WAKE_BOOST_DURATION_MS;
@@ -140,7 +141,7 @@ static void devfreq_update_boosts(struct boost_dev *b, unsigned long state)
 	struct devfreq *df = b->df;
 
 	mutex_lock(&df->lock);
-	if (test_bit(SCREEN_OFF, &state)) {
+	if (get_stamina_mode() || test_bit(SCREEN_OFF, &state)) {
 		df->min_freq = df->profile->freq_table[0];
 		df->max_boost = false;
 	} else {
