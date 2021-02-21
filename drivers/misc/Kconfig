@@ -684,6 +684,12 @@ config SIM_DETECT
 	  This driver can be used for sending notifications via
 	  switch_class when sim card is inserted or removed.
 
+config STAMINA
+	bool "stamina mode"
+	default y
+	help
+	  an attempt to replicate part of sony stamina mode
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
