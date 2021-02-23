@@ -75,9 +75,6 @@
 #define SYN_PAYLOAD_LENGTH		1
 #define SYN_DEVICE_INFO_SIZE		5
 #define SYN_DEVICE_BL_INFO_SIZE		2
-#define SYN_STAMINA_MODE_SUPPORTED_MASK		0x80000000
-#define SYN_STAMINA_REPROTRATE_SUPPORTED_MASK	0x00000001
-#define SYN_STAMINA_DOZE_HOLDOFF_SUPPORTED_MASK	0x00000002
 #define SYN_WAIT_TIME_AFTER_CHANGE_REPORTRATE	34
 #define HWTEST_SIZE_OF_COMMAND_PREFIX		2
 #define HWTEST_SIZE_OF_ONE_DIMENSION		1
@@ -815,20 +812,6 @@ struct clearpad_change_reportrate_t {
 	u8 mode;
 };
 
-struct clearpad_doze_holdoff_t {
-	bool supported;
-	u8 default_time;
-	u8 glove_mode_time;
-	u8 cover_mode_time;
-};
-
-struct clearpad_stamina_mode_t {
-	bool supported;
-	bool enabled;
-	struct clearpad_change_reportrate_t change_reportrate;
-	struct clearpad_doze_holdoff_t doze_holdoff;
-};
-
 struct fb_t {
 	bool unblank_done;
 	bool unblank_early_done;
@@ -958,7 +941,6 @@ struct clearpad_t {
 	struct clearpad_reset_t reset;
 	struct clearpad_noise_detect_t noise_det;
 	struct clearpad_interrupt_t interrupt;
-	struct clearpad_stamina_mode_t stamina;
 	struct clearpad_reg_offset_t reg_offset;
 	struct clearpad_charger_only_t charger_only;
 	int irq;
@@ -1557,93 +1539,6 @@ static int clearpad_put_block(struct clearpad_t *this, u16 addr,
 	return  rc == len ? 0 : (rc < 0 ? rc : -EIO);
 }
 
-static int clearpad_set_doze_holdoff_time(struct clearpad_t *this,
-					  u8 holdoff_time)
-{
-	int rc = 0;
-	u8 current_time = 0x00;
-
-	if (!this->stamina.supported) {
-		LOGI(this, "stamina mode is not supported\n");
-		goto end;
-	}
-	if (!this->stamina.doze_holdoff.supported) {
-		LOGI(this, "doze holdoff is not supported\n");
-		goto end;
-	}
-
-	if (clearpad_get(
-		SYNF(this, F01_RMI, CTRL, this->reg_offset.f01_ctrl05),
-			&current_time)) {
-		LOGE(this, "failed to get current Doze Holdoff\n");
-		rc = -EINVAL;
-		goto end;
-	}
-	if (current_time == holdoff_time) {
-		LOGI(this, "new Doze Holdoff is same as current=0x%02x\n",
-			current_time);
-		goto end;
-	}
-
-	/* F01_RMI_CTRL05: Doze Holdoff */
-	rc = clearpad_put(
-			SYNF(this, F01_RMI, CTRL,
-			     this->reg_offset.f01_ctrl05),
-			holdoff_time);
-	if (rc) {
-		LOGE(this, "failed to set new Doze Holdoff=0x%02x\n",
-			holdoff_time);
-		goto end;
-	}
-	/* F54_ANALOG_CMD00: Analog Command */
-	rc = clearpad_put(
-			SYNF(this, F54_ANALOG, COMMAND,
-				this->reg_offset.f54_cmd00),
-			ANALOG_COMMAND_FORCE_UPDATE_MASK);
-	if (rc) {
-		LOGE(this, "failed to set force update\n");
-		goto end;
-	}
-	LOGI(this, "changed Doze Holdoff=0x%02x\n", holdoff_time);
-
-end:
-	return rc;
-}
-
-/* need LOCK(&this->lock) */
-static int clearpad_set_doze_holdoff(struct clearpad_t *this)
-{
-	int rc = 0;
-	u8 holdoff_time = 0x00;
-
-	if (!this->stamina.supported) {
-		LOGI(this, "stamina mode is not supported\n");
-		goto end;
-	}
-	if (!this->stamina.doze_holdoff.supported) {
-		LOGI(this, "doze holdoff is not supported\n");
-		goto end;
-	}
-
-	LOGI(this, "glove mode: %s, cover mode/status: %s/%s\n",
-		this->glove.enabled ? "enable" : "disable",
-		this->cover.enabled ? "enable" : "disable",
-		this->cover.status ? "CLOSE" : "OPEN");
-
-	holdoff_time = this->stamina.doze_holdoff.default_time;
-	if (this->glove.enabled)
-		holdoff_time = this->stamina.doze_holdoff.glove_mode_time;
-	if (this->cover.enabled && this->cover.status)
-		holdoff_time = this->stamina.doze_holdoff.cover_mode_time;
-
-	rc = clearpad_set_doze_holdoff_time(this, holdoff_time);
-	if (rc)
-		goto end;
-
-end:
-	return rc;
-}
-
 static struct clearpad_funcarea_t clearpad_default_funcarea_array[] = {
 	{
 		{ 0, 0, 0, 0}, { 0, 0, 0, 0},
@@ -1875,9 +1770,6 @@ static int clearpad_set_glove_mode(struct clearpad_t *this, bool enable)
 		rc = clearpad_set_glove_finger_reg(this, enable);
 		if (rc)
 			goto end;
-		rc = clearpad_set_doze_holdoff(this);
-		if (rc)
-			LOGE(this, "failed to set Doze Holdoff\n");
 	}
 end:
 	if (rc)
@@ -1967,12 +1859,6 @@ static int clearpad_set_cover_status(struct clearpad_t *this)
 			SYNF(this, F54_ANALOG, COMMAND,
 				this->reg_offset.f54_cmd00),
 			ANALOG_COMMAND_FORCE_UPDATE_MASK);
-	if (rc)
-		goto end;
-
-	rc = clearpad_set_doze_holdoff(this);
-	if (rc)
-		LOGE(this, "failed to set Doze Holdoff\n");
 end:
 	if (rc)
 		LOGE(this, "failed to set cover status");
@@ -2042,115 +1928,6 @@ end:
 	return rc;
 }
 
-/*
- * Stamina (Report rate)
- */
-
-/* need LOCK(&this->lock) */
-static int clearpad_change_report_rate(struct clearpad_t *this)
-{
-	int rc = 0;
-	bool enable = false, report_status = false;
-	u8 buf;
-
-	if (!this) {
-		LOGE(this, "failed get this data\n");
-		rc = -EINVAL;
-		goto exit;
-	}
-
-	if (!this->stamina.change_reportrate.supported)
-		goto exit;
-
-	if (this->stamina.change_reportrate.mode > 0)
-		enable = true;
-	else
-		enable = false;
-
-	switch (this->chip_id) {
-	case SYN_CHIP_3330:
-	case SYN_CHIP_332U:
-		rc = clearpad_get(SYNF(this, F01_RMI, CTRL,
-			this->reg_offset.f01_ctrl00), &buf);
-		if (rc) {
-			LOGE(this, "failed to get status\n");
-			rc = -EINVAL;
-			goto exit;
-		}
-		if (BIT_GET(buf, DEVICE_CONTROL_REPORT_RATE))
-			report_status = true;
-
-		if (enable == report_status) {
-			LOGI(this, "report rate is already %s\n",
-			this->stamina.enabled ? "enabled" : "disabled");
-			goto exit;
-		}
-
-		rc = clearpad_put_bit(
-				SYNF(this, F01_RMI, CTRL,
-					this->reg_offset.f01_ctrl00),
-				enable ? DEVICE_CONTROL_REPORT_RATE_MASK : 0,
-				DEVICE_CONTROL_REPORT_RATE_MASK);
-		if (rc) {
-			LOGE(this, "failed to set report rate\n");
-			goto exit;
-		}
-		LOGI(this, "report rate %s\n",
-			enable ? "enable" : "disable");
-
-		clearpad_set_delay(SYN_WAIT_TIME_AFTER_CHANGE_REPORTRATE);
-
-		/* F54_ANALOG_CMD00: Analog Command */
-		rc = clearpad_put(SYNF(this, F54_ANALOG, COMMAND,
-					  this->reg_offset.f54_cmd00),
-					  ANALOG_COMMAND_FORCE_UPDATE_MASK);
-		if (rc) {
-			LOGE(this, "failed to set force update\n");
-			goto exit;
-		}
-
-		break;
-	case SYN_CHIP_3500:
-		/* F51_CUSTOM_CTRL30.06[1:0]: External Report Rate Selection */
-		rc = clearpad_put(
-				SYNF(this, F51_CUSTOM, CTRL,
-				this->reg_offset.f51_ctrl30
-				+ SYN_EXTERNAL_REPORT_RATE_OFFSET),
-				this->stamina.change_reportrate.mode);
-		if (rc) {
-			LOGE(this, "failed to set change report rate\n");
-			goto exit;
-		}
-
-		break;
-	default:
-		LOGE(this, "not supported on chip id 0x0%2x\n", this->chip_id);
-		goto exit;
-	}
-
-exit:
-	return rc;
-}
-
-/*
- * Stamina
- */
-
-/* need LOCK(&this->lock) */
-static int clearpad_set_stamina_mode(struct clearpad_t *this)
-{
-	int rc = 0;
-
-	if (!this->stamina.supported)
-		goto end;
-
-	rc = clearpad_change_report_rate(this);
-	if (rc)
-		LOGE(this, "failed to change report rate\n");
-
-end:
-	return rc;
-}
 
 /*
  * Wakeup gesture (EW)
@@ -2353,11 +2130,6 @@ static int clearpad_set_feature_settings(struct clearpad_t *this)
 		rc = clearpad_set_cover_window(this);
 	if (rc)
 		goto end;
-	if (this->stamina.enabled)
-		rc = clearpad_set_stamina_mode(this);
-	if (rc)
-		goto end;
-	rc = clearpad_set_doze_holdoff(this);
 end:
 	return rc;
 }
@@ -5294,10 +5066,6 @@ static ssize_t clearpad_state_show(struct device *dev,
 								PAGE_SIZE))
 		snprintf(buf, PAGE_SIZE,
 			"%d", this->cover.win_left);
-	else if (!strncmp(attr->attr.name, __stringify(stamina_mode),
-								PAGE_SIZE))
-		snprintf(buf, PAGE_SIZE,
-			"%d", this->stamina.enabled);
 	else
 		snprintf(buf, PAGE_SIZE, "illegal sysfs file");
 end:
@@ -6177,103 +5945,6 @@ err_in_check_support:
 	return size;
 }
 
-static ssize_t clearpad_stamina_mode_enabled_store(struct device *dev,
-		struct device_attribute *attr,
-		const char *buf, size_t size)
-{
-	int rc = 0;
-	int value = 0;
-	const char *session = "stamina mode enabled store";
-	struct clearpad_t *this = dev_get_drvdata(dev);
-	bool lazy_update = false;
-
-	LOGD(this, "start\n");
-
-	if (!this->stamina.supported) {
-		LOGI(this, "stamina mode is not supported\n");
-		goto err_in_check_support;
-	}
-
-	if (!this->post_probe.done) {
-		LOGI(this, "post_probe hasn't finished, will apply later\n");
-		lazy_update = true;
-		goto err_in_check_post_probe;
-	}
-
-	if (!this->dev_active || this->interrupt.count == 0) {
-		LOGI(this, "avoid to access I2C before waiting %d ms delay\n",
-				this->reset.delay_for_powerup_ms);
-		lazy_update = true;
-		goto not_ready_to_access_i2c;
-	}
-
-	rc = clearpad_ctrl_session_begin(this, session);
-	if (rc) {
-		LOGI(this, "not powered, will be applied later\n");
-		lazy_update = true;
-		goto err_in_session_begin;
-	}
-
-err_in_session_begin:
-err_in_check_post_probe:
-not_ready_to_access_i2c:
-	LOCK(&this->lock);
-	if (kstrtoint(buf, 0, &value)) {
-		LOGE(this, "failed to read %s", attr->attr.name);
-		rc = -EINVAL;
-		goto err_in_read_size;
-	}
-	switch (this->chip_id) {
-	case SYN_CHIP_3330:
-	case SYN_CHIP_332U:
-		if (value < 0 || 1 < value) {
-			LOGE(this, "invalid stamina report rate mode %d\n",
-					value);
-			goto err_in_read_size;
-		}
-		if (value) {
-			this->stamina.enabled = true;
-			this->stamina.change_reportrate.mode = 1;
-		} else {
-			this->stamina.enabled = false;
-			this->stamina.change_reportrate.mode = 0;
-		}
-		break;
-	case SYN_CHIP_3500:
-		if (value < 0 || 3 < value) {
-			LOGE(this, "invalid stamina report rate mode %d\n",
-					value);
-			goto err_in_read_size;
-		}
-		if (value)
-			this->stamina.enabled = true;
-		else
-			this->stamina.enabled = false;
-		this->stamina.change_reportrate.mode = value;
-		break;
-	default:
-		LOGE(this, "not supported on chip id 0x0%2x\n", this->chip_id);
-		goto err_in_read_size;
-	}
-	if (!lazy_update) {
-		rc = clearpad_set_stamina_mode(this);
-		if (rc)
-			LOGE(this, "failed to set stamina for device\n");
-	}
-err_in_read_size:
-	LOGI(this, "stamina mode %s\n",
-		this->stamina.enabled ? "enable" : "disable");
-	LOGI(this, "change report rate mode %d\n",
-		this->stamina.change_reportrate.mode);
-	UNLOCK(&this->lock);
-
-	if (!lazy_update)
-		clearpad_ctrl_session_end(this, session);
-
-err_in_check_support:
-	return size;
-}
-
 static ssize_t clearpad_post_probe_start_store(struct device *dev,
 		struct device_attribute *attr,
 		const char *buf, size_t size)
@@ -6335,9 +6006,6 @@ static struct device_attribute clearpad_sysfs_attrs[] = {
 	__ATTR(cover_win_left, S_IRUGO | S_IWUSR,
 				clearpad_state_show,
 				clearpad_cover_win_store),
-	__ATTR(stamina_mode, S_IRUGO | S_IWUSR,
-				clearpad_state_show,
-				clearpad_stamina_mode_enabled_store),
 	__ATTR(post_probe_start, S_IRUGO | S_IWUSR,
 				clearpad_state_show,
 				clearpad_post_probe_start_store),
@@ -6780,35 +6448,6 @@ static int clearpad_touch_config_dt(struct clearpad_t *this)
 	} else {
 		this->noise_det.retry_time_ms = value;
 	}
-
-	if (of_property_read_u32(devnode, "stamina_mode_supported", &value)) {
-		LOGW(this, "no stamina_mode_supported config\n");
-	} else {
-		this->stamina.supported =
-		(value & SYN_STAMINA_MODE_SUPPORTED_MASK) ? true : false;
-
-		this->stamina.change_reportrate.supported =
-		(value & SYN_STAMINA_REPROTRATE_SUPPORTED_MASK) ? true : false;
-
-		this->stamina.doze_holdoff.supported =
-		(value & SYN_STAMINA_DOZE_HOLDOFF_SUPPORTED_MASK)
-			? true : false;
-	}
-
-	if (of_property_read_u32(devnode, "doze_default_time", &value))
-		LOGW(this, "no doze_default_time config\n");
-	else
-		this->stamina.doze_holdoff.default_time = (u8)value;
-
-	if (of_property_read_u32(devnode, "doze_glove_mode_time", &value))
-		LOGW(this, "no doze_glove_mode_time config\n");
-	else
-		this->stamina.doze_holdoff.glove_mode_time = (u8)value;
-
-	if (of_property_read_u32(devnode, "doze_cover_mode_time", &value))
-		LOGW(this, "no doze_cover_mode_time config\n");
-	else
-		this->stamina.doze_holdoff.cover_mode_time = (u8)value;
 
 	/* read default register offset params */
 	clearpad_reg_offset_config_dt(this);
@@ -7889,11 +7528,6 @@ reg_F01_RMI:
 		 SYNF(this, F01_RMI, CTRL,
 		 this->reg_offset.f01_ctrl18), buf, 1);
 
-	/* F01_RMI_CTRL05: Doze Holdoff */
-	clearpad_debug_print_reg("F01_RMI_CTRL05: Doze Holdoff",
-		 SYNF(this, F01_RMI, CTRL,
-		 this->reg_offset.f01_ctrl05), buf, 1);
-
 	/* F01_RMI_DATA00: Device Status */
 	if (clearpad_debug_print_reg("F01_RMI_DATA00: Device Status",
 		     SYNF(this, F01_RMI, DATA,
@@ -8297,18 +7931,6 @@ static void clearpad_debug_info(struct clearpad_t *this)
 	       this->wakeup_gesture.enabled ? "true" : "false");
 	HWLOGI(this, "[watchdog] enabled=%s delay=%d\n",
 	       this->watchdog.enabled ? "true" : "false", this->watchdog.delay);
-	HWLOGI(this, "[stamina_mode] supported=%s enabled=%s\n",
-	       this->stamina.supported ? "true" : "false",
-	       this->stamina.enabled ? "true" : "false");
-	HWLOGI(this, INDENT "[change_reportrate] supported=%s mode=%d\n",
-	       this->stamina.change_reportrate.supported ? "true" : "false",
-	       this->stamina.change_reportrate.mode);
-	HWLOGI(this, INDENT "[doze holdoff] supported=%s default_time=%u "
-		"glove_mode_time=%u cover_mode_time=%u\n",
-	       this->stamina.doze_holdoff.supported ? "true" : "false",
-	       this->stamina.doze_holdoff.default_time,
-	       this->stamina.doze_holdoff.glove_mode_time,
-	       this->stamina.doze_holdoff.cover_mode_time);
 	HWLOGI(this, "[early unblank] done=%s early_done=%s\n",
 	       this->wakeup.unblank_done ? "true" : "false",
 	       this->wakeup.unblank_early_done ? "true" : "false");
