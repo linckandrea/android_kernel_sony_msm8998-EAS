@@ -28,7 +28,7 @@
 			preset_y_max = <1919>;
 
 			/* Stamina Mode */
-			stamina_mode_supported = <0x80000003>;
+			stamina_mode_supported = <0x80000000>;
 
 			/* F01_RMI_CTRL05: Doze Holdoff */
 			doze_default_time = <35>;
