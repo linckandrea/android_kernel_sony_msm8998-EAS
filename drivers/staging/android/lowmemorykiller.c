@@ -712,12 +712,10 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		lowmem_deathpending_timeout = jiffies + HZ;
 		rem += selected_tasksize;
 		rcu_read_unlock();
-<<<<<<< HEAD
-=======
+
 		get_task_struct(selected);
 		/* give the system time to free up the memory */
 		msleep_interruptible(20);
->>>>>>> parent of 995559435bc3... staging: Add Android low memory killer TNG from Sony kernel
 		trace_almk_shrink(selected_tasksize, ret,
 				  other_free, other_file,
 				  selected_oom_score_adj);
