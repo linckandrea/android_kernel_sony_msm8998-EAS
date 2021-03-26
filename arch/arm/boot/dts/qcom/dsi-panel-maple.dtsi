@@ -161,7 +161,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
@@ -288,7 +288,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
@@ -435,7 +435,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
@@ -566,7 +566,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
@@ -696,7 +696,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
@@ -823,7 +823,7 @@
 				qcom,mdss-dsi-v-back-porch = <10>;
 				qcom,mdss-dsi-v-pulse-width = <2>;
 				qcom,mdss-dsi-v-front-porch = <12>;
-				qcom,mdss-dsi-panel-framerate = <120>;
+				qcom,mdss-dsi-panel-framerate = <60>;
 				qcom,mdss-dsi-panel-timings = [00 1B 06 06 0B 11 05 07 05 03 04 00];
 				qcom,mdss-dsi-t-clk-post = <0x07>;
 				qcom,mdss-dsi-t-clk-pre = <0x29>;
