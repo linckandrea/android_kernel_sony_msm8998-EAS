@@ -43,7 +43,6 @@
 #include <soc/qcom/event_timer.h>
 #include <soc/qcom/lpm-stats.h>
 #include <soc/qcom/jtag.h>
-#include <soc/qcom/minidump.h>
 #include <asm/cputype.h>
 #include <asm/arch_timer.h>
 #include <asm/cacheflush.h>
@@ -1790,7 +1789,6 @@ static int lpm_probe(struct platform_device *pdev)
 {
 	int ret;
 	struct kobject *module_kobj = NULL;
-	struct md_region md_entry;
 
 	get_online_cpus();
 	lpm_root_node = lpm_of_parse_cluster(pdev);
