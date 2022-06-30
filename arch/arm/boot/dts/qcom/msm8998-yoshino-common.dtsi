@@ -52,15 +52,6 @@
 					fsmgr_flags = "wait,verify";
 					status = "ok";
 			};
- 
-			ocm {
-					compatible = "android,oem";
-					dev = "/dev/block/platform/soc/1da4000.ufshc/by-name/oem";
-					type = "ext4";
-					mnt_flags = "ro,barrier=1";
-					fsmgr_flags = "wait";
-					status = "ok";
-			};
 		};
 	};
 };
@@ -3625,7 +3616,7 @@
 	linux,name = "wled";
 	qcom,fs-curr-ua = <24000>;
 	qcom,led-strings-list = [00 01 02];
-	somc,init-br-ua = <1200>;
+	somc,init-br-ua = <800>;
 	somc-s1,br-power-save-ua = <800>;
 	somc,bl-scale-enabled;
 	somc,area_count_table_size = <0>;
