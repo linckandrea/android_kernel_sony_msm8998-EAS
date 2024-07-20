@@ -1,0 +1,5 @@
+# (c) 2020 changes for pop kernel by linckandrea
+
+# Set init values
+on property:vendor.post_boot.parsed=1
+    exec u:r:magisk:s0 root root -- /sbin/pop_kernel_boot.sh
