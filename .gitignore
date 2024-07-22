@@ -39,6 +39,9 @@ Module.symvers
 *.dwo
 *.su
 *.zip
+AnyKernel3/poplar/Image.gz-dtb
+AnyKernel3/maple/Image.gz-dtb
+AnyKernel3/lilac/Image.gz-dtb
 
 #
 # Top-level generic files
