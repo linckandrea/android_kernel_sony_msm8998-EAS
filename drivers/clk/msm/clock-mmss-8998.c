@@ -356,7 +356,9 @@ static struct clk_freq_tbl ftbl_mdp_clk_src[] = {
 	F_MM( 300000000,   mmsscc_gpll0,    2,    0,     0),
 	F_MM( 330000000, mmpll5_pll_out,  2.5,    0,     0),
 	F_MM( 412500000, mmpll5_pll_out,    2,    0,     0),
+#ifdef CONFIG_MAPLE_4K
 	F_MM( 550000000, mmpll5_pll_out,  1.5,    0,     0),
+#endif
 	F_END
 };
 
@@ -371,8 +373,13 @@ static struct rcg_clk mdp_clk_src = {
 		.dbg_name = "mdp_clk_src",
 		.ops = &clk_ops_rcg,
 		.flags = CLKFLAG_NO_RATE_CACHE,
+#ifndef CONFIG_MAPLE_4K
+		VDD_DIG_FMAX_MAP4(LOWER, 171430000, LOW, 275000000,
+					NOMINAL, 330000000, HIGH, 412500000),
+#else
 		VDD_DIG_FMAX_MAP4(LOWER, 171430000, LOW, 275000000,
 					NOMINAL, 330000000, HIGH, 550000000),
+#endif
 		CLK_INIT(mdp_clk_src.c),
 	},
 };
@@ -476,7 +483,9 @@ static struct clk_freq_tbl ftbl_rot_clk_src[] = {
 	F_MM( 275000000, mmpll5_pll_out,    3,    0,     0),
 	F_MM( 330000000, mmpll5_pll_out,  2.5,    0,     0),
 	F_MM( 412500000, mmpll5_pll_out,    2,    0,     0),
+#ifdef CONFIG_MAPLE_4K
 	F_MM( 550000000, mmpll5_pll_out,  1.5,    0,     0),
+#endif
 	F_END
 };
 
@@ -490,8 +499,13 @@ static struct rcg_clk rot_clk_src = {
 		.dbg_name = "rot_clk_src",
 		.ops = &clk_ops_rcg,
 		.flags = CLKFLAG_NO_RATE_CACHE,
+#ifndef CONFIG_MAPLE_4K
+		VDD_DIG_FMAX_MAP4(LOWER, 171430000, LOW, 275000000,
+				NOMINAL, 330000000, HIGH, 412500000),
+#else	
 		VDD_DIG_FMAX_MAP4(LOWER, 171430000, LOW, 275000000,
 					NOMINAL, 330000000, HIGH, 550000000),
+#endif
 		CLK_INIT(rot_clk_src.c),
 	},
 };
