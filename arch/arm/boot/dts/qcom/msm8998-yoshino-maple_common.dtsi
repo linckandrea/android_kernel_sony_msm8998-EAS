@@ -281,6 +281,10 @@
 				 <9000 1700>; /* 9V @ 1.7A */
 };
 
+&mdss_mdp {
+	qcom,max-clk-rate = <550000000>;
+};
+
 &mdss_dsi {
 	hw-config = "split_dsi";
 };
