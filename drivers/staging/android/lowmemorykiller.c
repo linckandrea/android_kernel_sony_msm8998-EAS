@@ -342,7 +342,7 @@ static struct notifier_block lmk_vmpr_nb = {
 	.notifier_call = lmk_vmpressure_notifier,
 };
 
-static int test_task_flag(struct task_struct *p, int flag)
+static inline int test_task_flag(struct task_struct *p, int flag)
 {
 	struct task_struct *t;
 
