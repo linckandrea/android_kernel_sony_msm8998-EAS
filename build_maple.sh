@@ -22,7 +22,7 @@ echo
 echo "Issue Build Commands"
 echo
 
-PATH=""$HOME"/Android-dev/toolchains/aosp-clang/clang-r416183b/bin:"$HOME"/Android-dev/toolchains/aosp-clang/aarch64-linux-android-4.9/bin:"$HOME"/Android-dev/toolchains/aosp-clang/arm-linux-androideabi-4.9/bin:${PATH}" \
+PATH=""$HOME"/Android-dev/toolchains/aosp-clang/clang-r522817/bin:"$HOME"/Android-dev/toolchains/aosp-clang/aarch64-linux-android-4.9/bin:"$HOME"/Android-dev/toolchains/aosp-clang/arm-linux-androideabi-4.9/bin:${PATH}" \
 
 echo
 echo "Build The Good Stuff"
@@ -34,7 +34,10 @@ make -j$(nproc --all) O=out \
                       CC=clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
                       CROSS_COMPILE=aarch64-linux-android- \
-                      CROSS_COMPILE_ARM32=arm-linux-androideabi-
+                      CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+                      HOSTCFLAGS="-fuse-ld=lld -Wno-unused-command-line-argument" \
+                      LLVM=1 \
+                      LLVM_IAS=1
 
 echo
 echo "Making flashable zip"
@@ -52,3 +55,5 @@ echo
 cp ./out/arch/arm64/boot/Image.gz-dtb ./AnyKernel3/maple/
 cd ./AnyKernel3/maple/
 zip -r9 Pop_kernel-maple-"$version"-"$branch"-"$last_commit"-EAS.zip * -x .git README.md *placeholder
+cd ..
+cd ..
