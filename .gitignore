@@ -52,6 +52,7 @@ Module.symvers
 /System.map
 /Module.markers
 /out
+/AnyKernel3
 
 #
 # Debian directory (make deb-pkg)
